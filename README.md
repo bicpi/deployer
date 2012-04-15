@@ -5,9 +5,9 @@
 A simple Yaml configuration file eases the complexity of handling connection data to
 different remote servers by providing support for
 
-* different targets - e.g. development, stage or production servers
-* excluding special files or directories - e.g. cache, logs, configuration files
-* command hooks - e.g. to clear a cache after deployment or rebuilding search indices
+* **multiple targets** - e.g. development, stage or production servers
+* **excluding special files or directories** - e.g. cache, logs, configuration files
+* **command hooks** - e.g. to clear a cache or rebuilding search indices after deployment
 
 The configuration allows to merge default settings with specific target settings to avoid
 redundancy.
@@ -18,8 +18,8 @@ Using the Deployer is dead simple:
 
 You'll be guided through a short interactive process asking for
 
-* the local source directory to be synced - defaults to the current directory
-* a target name that defines the remote server (e.g. "dev", "stage", "prod") - defaults to "dev"
+* the local source directory to be synced - *defaults to the current directory*
+* a target name that defines the remote server (e.g. "dev", "stage", "prod") - *defaults to "dev"*
 
 The detailed target data is read from the configuration file `.deployer.yml` in the local source
 directory.
@@ -39,14 +39,15 @@ You'll need the following software installed on your server:
 * rsync
 * ssh
 
-For the recommended way of installation you may also need to install
+For the recommended way of installation you may also need to install:
+
 * git
 * wget
 
-Deployer depends on some Symfony components. All dependencies are usally resolved and installed by Composer
-as you'll see below.
+Deployer depends on some Symfony components. All dependencies are usally resolved and installed by
+[Composer](http://getcomposer.org) as you'll see below.
 
-### Clone the git repository
+### Clone the Deployer git repository
 
 Run the following commands:
 
@@ -55,6 +56,8 @@ Run the following commands:
     $ cd deployer
     $ wget http://getcomposer.org/composer.phar
     $ php composer.phar install
+
+Deployer is now installed on your system.
 
 ### Create symbolic link in your ~/bin directory
 
@@ -70,54 +73,56 @@ Now you're able to call the `deployer` command from everywhere on your system.
 ## 2) Configuration
 
 Before the first deployment of a project or directory you have to save the configuration into a
-file called `.deployer.yml` inside the root of your local source directory. Please note that only
-a hostname alias in the Deployer configuration. You need to setup a key based SSH authentication
-using the `~/.ssh/config` file ([tutorial](http://nerderati.com/2011/03/simplify-your-life-with-an-ssh-config-file))).
+file called `.deployer.yml` inside the root of your local source directory. It defines the target
+server(s), exclude files and command hooks. Please note that only a hostname alias is used in the Deployer
+configuration. You need to setup a key based SSH authentication using the `~/.ssh/config` file
+([tutorial](http://nerderati.com/2011/03/simplify-your-life-with-an-ssh-config-file))) so that Deployer
+can safely connect to your remote server(s).
 
 Here is a sample configuration:
 
-    default: # Configuration used by all targets
+    default: # Configuration used by **ALL targets**
         target: # Details about the remote host
             host: ALIAS # Hostname alias according to your ~/.ssh/config file
         commands: # Commands that may be hooked into the deployment process
             post_deploy: # Array of commands to be executed after the deployment on the remote server
+                - app/console cache:clear
                 - ...
-                - ...
-        excludes: | # File to be excluded from the deployment
+        excludes: | # Files to be excluded from the deployment
             .deployer.yml
             .gitignore
             .gitkeep
             /build.xml
             /cache/*
             /logs/*
-    dev: # Aditional configuration for the 'dev' target
+    dev: # Aditional configuration for the **dev** target only
         target:
             dir: /path/to/dev/project/dir/on/remote/host
         excludes: |
             /web/front_stage.php
             /web/front.php
-    stage: # Aditional configuration for the 'stage' target
+    stage: # Aditional configuration for the **stage** target only
         target:
             dir: /path/to/stage/project/dir/on/remote/host
         excludes: |
             /web/config.php
             /web/front_dev.php
             /web/front.php
-    prod: # Aditional configuration for the 'prod' target
+    prod: # Aditional configuration for the **prod** target only
         target:
             dir: /path/to/prod/project/dir/on/remote/host
         excludes: |
             /web/config.php
             /web/front_*.php
 
-The custom target configuration will be merged with the default configuration. All custom target setting
+The custom target configuration will be merged with the default configuration. All custom target settings
 will either take precedence over the default settings (`target|host`, `target|dir`) or will be added to
-the default setting (`commands|post_commit`, `excludes`). Thus, you'll have a minimum effort to write your
+the default settings (`commands|post_commit`, `excludes`). Thus, you'll have a minimum effort to write your
 configuration and there are no redundancies.
 
 ## 3) Deploy
 
-The usual way of deployment is to cd into the project directory you want to deploy.
+The usual way of deployment is to execute Deployer from within the local source directory
 
     $ cd /path/to/local/project/directory
 
