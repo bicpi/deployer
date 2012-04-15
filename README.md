@@ -1,13 +1,32 @@
 # Deployer
 
-The Deployer tool reduces the complexity of a deployment from a local directory to the directory
-on a remote server to a simple command line call:
+**The Deployer command line tool allows to synchronize a local with a remote directory.**
 
-    $ cd /path/to/local/project/dir
+A simple Yaml configuration file eases the complexity of handling connection data to
+different remote servers by providing support for
+
+* different targets - e.g. development, stage or production servers
+* excluding special files or directories - e.g. cache, logs, configuration files
+* command hooks - e.g. to clear a cache after deployment or rebuilding search indices
+
+The configuration allows to merge default settings with specific target settings to avoid
+redundancy.
+
+Using the Deployer is dead simple:
+
     $ deployer
 
-You'll be guided through a short interactive process with a preview (dry run) what will be synced
-and if you confirm you deployment will roll out.
+You'll be guided through a short interactive process asking for
+
+* the local source directory to be synced - defaults to the current directory
+* a target name that defines the remote server (e.g. "dev", "stage", "prod") - defaults to "dev"
+
+The detailed target data is read from the configuration file `.deployer.yml` in the local source
+directory.
+
+The deployment process then starts with a dry run (preview). You'll see a detailed list of what will
+happen during the deployment process. If you are ready to go the deployment will roll out after prompting
+for your final confirmation.
 
 ## 1) Installation
 
@@ -15,15 +34,17 @@ and if you confirm you deployment will roll out.
 
 You'll need the following software installed on your server:
 
+* OS: *nix
 * PHP > 5.3.2
 * rsync
 * ssh
 
-For the recommended way of installation you may also need
+For the recommended way of installation you may also need to install
 * git
 * wget
 
-Deployer depends on some third party software. All dependencies are usally resolved and installed by Composer.
+Deployer depends on some Symfony components. All dependencies are usally resolved and installed by Composer
+as you'll see below.
 
 ### Clone the git repository
 
@@ -38,8 +59,8 @@ Run the following commands:
 ### Create symbolic link in your ~/bin directory
 
 If you want to use the `deployer` command without specifing the whole path to the installation
-directory over an over again just create a symbolic link to it in a directory of your PATH
-environment variable, e.g.:
+directory over an over again just create a symbolic link to it in a directory which is included
+in your PATH environment variable, e.g.:
 
     $ cd ~/bin
     $ ln -s /path/to/deployer/bin/deployer deployer
@@ -48,12 +69,16 @@ Now you're able to call the `deployer` command from everywhere on your system.
 
 ## 2) Configuration
 
-Before the first deployment you have to save the configuration into a file called `.deployer.yml`
-inside the root of your project directory. Here is a sample configuration:
+Before the first deployment of a project or directory you have to save the configuration into a
+file called `.deployer.yml` inside the root of your local source directory. Please note that only
+a hostname alias in the Deployer configuration. You need to setup a key based SSH authentication
+using the `~/.ssh/config` file ([tutorial](http://nerderati.com/2011/03/simplify-your-life-with-an-ssh-config-file))).
 
-    default: # Configuration use for all targets
+Here is a sample configuration:
+
+    default: # Configuration used by all targets
         target: # Details about the remote host
-            host: HOSTNAME # Hostname according to your ~/.ssh/config file
+            host: ALIAS # Hostname alias according to your ~/.ssh/config file
         commands: # Commands that may be hooked into the deployment process
             post_deploy: # Array of commands to be executed after the deployment on the remote server
                 - ...
@@ -92,9 +117,11 @@ configuration and there are no redundancies.
 
 ## 3) Deploy
 
-The usual way of deployment is to cd into the project directory you want to deploy. After setting up the
-`.deployer.yml` (on first deployment only) you just need to execute `deployer`. By default, Deployer
-assumes that you want to sync the current directory to the `dev` target. You may change these defaults
-(e.g for a productive deployment) during the interactive deployment process. A dry run then checks and displays
-what needs to be synced with the remote directory. All configured post deploy hooks (optional) are displayed, too.
-Deployer the asks for a final confirmation to do the actual deployment.
+The usual way of deployment is to cd into the project directory you want to deploy.
+
+    $ cd /path/to/local/project/directory
+
+After setting up the `.deployer.yml` in this directory (before first deployment only) you just need to
+execute the `deployer` command to start the above described deployment process:
+
+    $ deployer
