@@ -1,7 +1,6 @@
 <?php
 namespace bicpi\Deployer;
 
-use bicpi\Deployer\AbortException;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -10,6 +9,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Process\Process;
+use bicpi\Deployer\AbortException;
 
 class DeployCommand extends Command
 {
@@ -69,7 +69,6 @@ class DeployCommand extends Command
             $this->abortUnless(file_exists($this->sourceDir), 'Source directory does not exist: '.$this->sourceDir);
             $this->sourceDir = realpath($this->sourceDir);
             $this->parseConfig();
-            file_put_contents($this->getExcludesFilepath(), $this->config['excludes']);
             $cmd = sprintf('ssh %s "whoami"', $this->config['host']);
             $this->abortUnless('root' != $this->process($cmd), "Don't call this command as root on remote machine");
             $this->deploy();
@@ -167,6 +166,8 @@ class DeployCommand extends Command
             'commands' => $commands,
             'excludes' => $excludes
         );
+
+        file_put_contents($this->getExcludesFilepath(), $this->config['excludes']);
     }
 
     protected function abort($msg)
@@ -231,6 +232,6 @@ class DeployCommand extends Command
 
     public function __destruct()
     {
-        @unlink($this->excludesFilepath);
+        file_exists($this->excludesFilepath) && @unlink($this->excludesFilepath);
     }
 }
