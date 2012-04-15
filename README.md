@@ -1,8 +1,6 @@
-Deployer
-========
+# Deployer
 
-To make a long story short
---------------------------
+**To make a long story short**
 
 The Deployer tool reduces the complexity of a deployment from a local directory to the directory
 on a remote server to a simple command line call:
@@ -12,12 +10,9 @@ on a remote server to a simple command line call:
 
 You're done.
 
+**The long story**
 
-*The long story*
-----------------
-
-1) Installation
----------------
+## 1) Installation
 
 ### Requirements
 
@@ -45,8 +40,7 @@ To persist this setting add the line to your `~./.profile` file.
 
 Now you can use the `deployer` command from everywhere on your system.
 
-2) Configuration
-----------------
+## 2) Configuration
 
 Before the first deployment you have to save the configuration into a file called `.deployer.yml`
 inside the root of your project directory. Here is a sample configuration:
