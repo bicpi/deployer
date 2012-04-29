@@ -85,6 +85,8 @@ Here is a sample configuration:
         target: # Details about the remote host
             host: ALIAS # Hostname alias according to your ~/.ssh/config file
         commands: # Commands that may be hooked into the deployment process
+            pre_deploy: # Array of commands to be executed before the deployment on the local server
+                - app/console assetic:dump --env=prod --no-debug
             post_deploy: # Array of commands to be executed after the deployment on the remote server
                 - app/console cache:clear
                 - ...

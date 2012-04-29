@@ -92,6 +92,21 @@ class DeployCommand extends Command
                 }
                 $writeLn('Go for it!', $isDry);
             }
+            if (array_key_exists('pre_deploy', $this->config['commands'])) {
+                $localCmds = (array) $this->config['commands']['pre_deploy'];
+                $writeLn(count($localCmds).' pre deploy (local) commands found', $isDry);
+                foreach ($localCmds as $localCmd) {
+                    $writeLn('Executing pre deploy command local: '.$localCmd, $isDry);
+                    if ($isDry) {
+                        $writeLn('Dummy executing local: '.$localCmd, $writeLn);
+                    } else {
+                        $cmd = sprintf('cd %s && %s', $this->sourceDir, $localCmd);
+                        $this->process($cmd, true);
+                    }
+                }
+            } else {
+                $writeLn('No pre deploy commands found', $isDry);
+            }
             $writeLn('Start syncing', $isDry);
             $this->sync($this->sourceDir, $this->config['host'], $this->config['dir'], $this->getExcludesFilepath(), $isDry);
             $writeLn('Syncing done', $isDry);
