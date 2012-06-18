@@ -118,7 +118,11 @@ class DeployCommand extends Command
                     if ($isDry) {
                         $writeLn('Dummy executing: '.$remoteCmd, $writeLn);
                     } else {
-                        $cmd = sprintf('ssh %s "cd %s && %s"', $this->config['host'], $this->config['dir'], $remoteCmd);
+                        $cmdString = sprintf('cd %s && %s', $this->config['dir'], $remoteCmd);
+                        if (strrpos($cmdString, 'app/console')) {
+                            $cmdString .= sprintf(' --env=%s', $this->targetKey);
+                        }
+                        $cmd = sprintf('ssh %s "%s"', $this->config['host'], $cmdString);
                         $this->process($cmd, true);
                     }
                 }
