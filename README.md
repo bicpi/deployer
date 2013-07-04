@@ -27,7 +27,7 @@ The deployment process then starts with a dry run (preview). You'll see a detail
 of what will happen during the deployment process.
 
 The command runs in dry mode by default. If you're ready to do the real sync, just add the
-`--force` parameter, e.g.
+`--force` parameter, e.g.:
 
     $ deployer stage --force
 
@@ -134,6 +134,6 @@ The usual way of deployment is to execute Deployer from within the local source 
     $ cd /path/to/local/project/directory
 
 After setting up the `.deployer.yml` in this directory (before first deployment only) you just need to
-execute the `deployer` command to start the above described deployment process:
+execute the `deployer` command with a valid target name to start the above described deployment process:
 
-    $ deployer
+    $ deployer stage
