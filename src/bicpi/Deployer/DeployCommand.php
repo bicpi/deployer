@@ -53,6 +53,9 @@ class DeployCommand extends Command
         $this
             ->setName('deploy')
             ->setDescription('Deploy an application via rsync')
+            ->addArgument('target', InputArgument::REQUIRED, 'The target environement you want to deploy to')
+            ->addOption('source-dir', null, InputOption::VALUE_OPTIONAL, 'Source directory that should be synced to remote', '.')
+            ->addOption('force', null, InputOption::VALUE_NONE, 'Do real deployment, no dry run')
         ;
     }
 
@@ -61,8 +64,10 @@ class DeployCommand extends Command
         $this->input = $input;
         $this->output = $output;
         $this->dialog = $this->getHelperSet()->get('dialog');
-        $this->sourceDir = $this->dialog->ask($this->output, "<question>Please enter the source directory: [.]</question>", '.');
-        $this->targetKey = $this->dialog->ask($this->output, "<question>Please enter the target name: [dev]</question>", 'dev');
+
+        $this->targetKey = $input->getArgument('target');
+        $this->sourceDir = $input->getOption('source-dir');
+        $this->force = $input->getOption('force');
 
         try {
             $this->abortUnless('root' != $this->process('whoami'), "Don't call this command as root on local machine");
@@ -84,49 +89,44 @@ class DeployCommand extends Command
             $prefix = $isDry ? '!DRY RUN > ' : '> ';
             $output->writeLn($prefix.$msg);
         };
-        foreach (array(true, false) as $isDry) {
-            $writeLn("Starting deployment from '{$this->sourceDir}' to '{$this->config['host']}:{$this->config['dir']}'", $isDry);
-            if (!$isDry) {
-                if (!$this->dialog->askConfirmation($this->output, '<question>Sure to start real deployment?</question>', false)) {
-                    $this->abort('Deployment aborted. No changes applied.');
+        $isDry = !$this->force;
+
+        $writeLn("Starting deployment from '{$this->sourceDir}' to '{$this->config['host']}:{$this->config['dir']}'", $isDry);
+        $writeLn('Go for it!', $isDry);
+        if (array_key_exists('pre_deploy', $this->config['commands'])) {
+            $localCmds = (array) $this->config['commands']['pre_deploy'];
+            $writeLn(count($localCmds).' pre deploy (local) commands found', $isDry);
+            foreach ($localCmds as $localCmd) {
+                $writeLn('Executing pre deploy command local: '.$localCmd, $isDry);
+                if ($isDry) {
+                    $writeLn('Dummy executing local: '.$localCmd, $writeLn);
+                } else {
+                    $cmd = sprintf('cd %s && %s', $this->sourceDir, $localCmd);
+                    $this->process($cmd, true);
                 }
-                $writeLn('Go for it!', $isDry);
             }
-            if (array_key_exists('pre_deploy', $this->config['commands'])) {
-                $localCmds = (array) $this->config['commands']['pre_deploy'];
-                $writeLn(count($localCmds).' pre deploy (local) commands found', $isDry);
-                foreach ($localCmds as $localCmd) {
-                    $writeLn('Executing pre deploy command local: '.$localCmd, $isDry);
-                    if ($isDry) {
-                        $writeLn('Dummy executing local: '.$localCmd, $writeLn);
-                    } else {
-                        $cmd = sprintf('cd %s && %s', $this->sourceDir, $localCmd);
-                        $this->process($cmd, true);
-                    }
-                }
-            } else {
-                $writeLn('No pre deploy commands found', $isDry);
-            }
-            $writeLn('Start syncing', $isDry);
-            $this->sync($this->sourceDir, $this->config['host'], $this->config['dir'], $this->getExcludesFilepath(), $isDry);
-            $writeLn('Syncing done', $isDry);
-            if (array_key_exists('post_deploy', $this->config['commands'])) {
-                $remoteCmds = (array) $this->config['commands']['post_deploy'];
-                $writeLn(count($remoteCmds).' post deploy commands found', $isDry);
-                foreach ($remoteCmds as $remoteCmd) {
-                    $writeLn('Executing post deploy command: '.$remoteCmd, $isDry);
-                    if ($isDry) {
-                        $writeLn('Dummy executing: '.$remoteCmd, $writeLn);
-                    } else {
-                        $cmd = sprintf('ssh %s "cd %s && %s"', $this->config['host'], $this->config['dir'], $remoteCmd);
-                        $this->process($cmd, true);
-                    }
-                }
-            } else {
-                $writeLn('No post deploy commands found', $isDry);
-            }
-            $writeLn('Deployment finished', $isDry);
+        } else {
+            $writeLn('No pre deploy commands found', $isDry);
         }
+        $writeLn('Start syncing', $isDry);
+        $this->sync($this->sourceDir, $this->config['host'], $this->config['dir'], $this->getExcludesFilepath(), $isDry);
+        $writeLn('Syncing done', $isDry);
+        if (array_key_exists('post_deploy', $this->config['commands'])) {
+            $remoteCmds = (array) $this->config['commands']['post_deploy'];
+            $writeLn(count($remoteCmds).' post deploy commands found', $isDry);
+            foreach ($remoteCmds as $remoteCmd) {
+                $writeLn('Executing post deploy command: '.$remoteCmd, $isDry);
+                if ($isDry) {
+                    $writeLn('Dummy executing: '.$remoteCmd, $writeLn);
+                } else {
+                    $cmd = sprintf('ssh %s "cd %s && %s"', $this->config['host'], $this->config['dir'], $remoteCmd);
+                    $this->process($cmd, true);
+                }
+            }
+        } else {
+            $writeLn('No post deploy commands found', $isDry);
+        }
+        $writeLn('Deployment finished', $isDry);
     }
 
     protected function parseConfig()
