@@ -14,19 +14,24 @@ redundancy.
 
 Using the Deployer is dead simple:
 
-    $ deployer
+    $ deployer <TARGET-NAME>
 
-You'll be guided through a short interactive process asking for
+The target name defines the configuration to be used, e.g. for a "dev", "stage" or "prod"
+environment. The detailed target data is read from the configuration file `.deployer.yml`
+in the local source directory.
 
-* the local source directory to be synced - *defaults to the current directory*
-* a target name that defines the remote server (e.g. "dev", "stage", "prod") - *defaults to "dev"*
+The current directory will be used as the local source directory - it may be changed by
+the `--source-dir=<SOURCE-DIR>` parameter.
 
-The detailed target data is read from the configuration file `.deployer.yml` in the local source
-directory.
+The deployment process then starts with a dry run (preview). You'll see a detailed list
+of what will happen during the deployment process.
 
-The deployment process then starts with a dry run (preview). You'll see a detailed list of what will
-happen during the deployment process. If you are ready to go the deployment will roll out after prompting
-for your final confirmation.
+The command runs in dry mode by default. If you're ready to do the real sync, just add the
+`--force` parameter, e.g.
+
+    $ deployer stage --force
+
+This will roll out the real deployment!
 
 ## 1) Installation
 
@@ -44,7 +49,7 @@ For the recommended way of installation you may also need to install:
 * git
 * wget
 
-Deployer depends on some Symfony components. All dependencies are usally resolved and installed by
+Deployer depends on some Symfony components. All dependencies are usually resolved and installed by
 [Composer](http://getcomposer.org) as you'll see below.
 
 ### Clone the Deployer git repository
